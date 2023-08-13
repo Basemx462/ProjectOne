@@ -1,0 +1,33 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Terraform') {
+            steps {
+                // Bind AWS credentials to environment variables
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding', 
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', 
+                    credentialsId: 'AWS-ID'
+                ]]) {
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
+
+        stage('Custom Script') {
+            steps {
+                // Replace 'script.sh' with the actual name of your script file in the Jenkins workspace
+                sh './dynamic_hosts.sh'
+            }
+        }
+
+        stage('Ansible') {
+            steps {
+                // Replace 'playbook.yml' with the actual name of your Ansible playbook file in the Jenkins workspace
+                sh 'ansible-playbook ec2_docker_setup.yml'
+            }
+        }
+    }
+}

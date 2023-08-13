@@ -1,0 +1,28 @@
+pipeline {
+    agent {
+        label 'new-ec2'
+    }
+
+    environment {
+        DOCKER_HUB_CREDS = credentials('Docker-Hub') // Use the ID of the Docker Hub credential you created
+    }
+
+    stages {
+        stage('Pull image') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'Docker-Hub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh "sudo docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
+                        sh 'sudo docker pull basemx/new-image'
+                    }
+                }
+            }
+        }
+
+        stage('Run container') {
+            steps {
+                sh 'sudo docker run -d -p 8071:3000 basemx/new-image'
+            }
+        }
+    }
+}
